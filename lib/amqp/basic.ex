@@ -303,7 +303,11 @@ defmodule AMQP.Basic do
   """
   def cancel(%Channel{pid: pid}, consumer_tag, options \\ []) do
     basic_cancel = basic_cancel(consumer_tag: consumer_tag, nowait: Keyword.get(options, :no_wait, false))
-    basic_cancel_ok(consumer_tag: consumer_tag) = :amqp_channel.call pid, basic_cancel
-    {:ok, consumer_tag}
+    case :amqp_channel.call(pid, basic_cancel) do
+      basic_cancel_ok(consumer_tag: consumer_tag) ->
+        {:ok, consumer_tag}
+      :closing ->
+        {:ok, consumer_tag}
+    end
   end
 end
